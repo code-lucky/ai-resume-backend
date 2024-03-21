@@ -1,103 +1,107 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { Like, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { md5 } from 'src/utils/md5';
-import { LoginUserVo } from './vo/login-user.vo';
-import { userLoginByPasswordDto } from './dto/user-login-password.dto';
-import { UserInfoVo } from './vo/user-info.vo';
 import { User } from '../entitys/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UserListVo } from './vo/user-list.vo';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { decrypt } from '../../utils/crypto'
+import { RedisService } from 'src/redis/redis.service';
+import { md5 } from 'src/utils/md5';
+import { LoginDto } from './dto/login.dto';
+import { LoginUserVo } from './vo/login-user.vo';
+import { UpdatePasswordDto } from './dto/update_paddword.dto';
 @Injectable()
 export class UserService {
 
   @InjectRepository(User)
   private userRepository: Repository<User>;
 
-  async userLoginByPassword(userLogin: userLoginByPasswordDto) {
-    const user = await this.userRepository.findOneBy({
-      userName: userLogin.userName,
-      isDelete: 0
-    })
+  @Inject(RedisService)
+  private redisService: RedisService;
 
-    if (!user) {
-      throw new HttpException('未找到该用户', HttpStatus.BAD_REQUEST)
+  /**
+   * 用户注册
+   * @param user 
+   * @returns 
+   */
+  async createUser(user: CreateUserDto) {
+    // 获取注册验证码
+    const captcha = await this.redisService.get(`captcha_${user.email}`);
+
+    if (!captcha) {
+      throw new HttpException('验证码已过期', HttpStatus.BAD_REQUEST);
     }
-    if (user.password !== md5(decrypt(userLogin.password))) {
-      throw new HttpException('密码错误', HttpStatus.OK)
+
+    if (user.captcha !== captcha) {
+      throw new HttpException('验证码错误', HttpStatus.BAD_REQUEST);
     }
 
-    if (user.status === 1) {
-      throw new HttpException('账户已冻结，请联系管理员', HttpStatus.BAD_REQUEST)
+    const findUser = await this.userRepository.findOneBy({ email: user.email });
+
+    if (findUser) {
+      throw new HttpException('邮箱已注册', HttpStatus.BAD_REQUEST);
     }
 
-    const vo = new LoginUserVo();
-    const { id, userName, headPic, phoneNumber, email } = user
-    vo.userInfo = { id, userName, headPic, phoneNumber, email }
-    return vo
-  }
-
-  async getUserInfo(userId: number) {
-    const user = await this.userRepository.findOneBy({ id: userId })
-    if (!user) throw new HttpException('未找到该用户', HttpStatus.BAD_REQUEST)
-
-    const vo = new UserInfoVo();
-
-    const { id, userName, email, headPic, phoneNumber } = user
-    vo.id = id;
-    vo.username = userName;
-    vo.email = email;
-    vo.headPic = headPic;
-    vo.phoneNumber = phoneNumber
-    return vo
-  }
-
-  async createUser(createUser: CreateUserDto) {
-    console.log(createUser)
-    const user = await this.userRepository.findOneBy({
-      userName: createUser.userName
-    })
-    if (user) throw new HttpException('已存在该用户', HttpStatus.BAD_REQUEST)
+    const newUser = new User();
+    newUser.email = user.email;
+    newUser.password = md5(user.password);
+    newUser.user_name = user.email;
     try {
-      const { userName, password, email, roleId, status } = createUser
-      const addUser = new User()
-      addUser.userName = userName;
-      addUser.password = md5(password);
-      addUser.email = email;
-      addUser.status = status
-      this.userRepository.save(addUser)
-      return '添加成功'
+      await this.userRepository.save(newUser);
+      return '注册成功';
     } catch (error) {
-      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR)
+      throw new HttpException('注册失败', HttpStatus.BAD_REQUEST);
     }
   }
 
-  async updateUser(user: UpdateUserDto) {
-
-    const userVo = await this.userRepository.findOneBy({ id: user.id })
-
-    if (!userVo) {
-      throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST)
-    }
-
-    const result = await this.userRepository.
-      createQueryBuilder().
-      update(User).
-      set({
-        userName: user.userName,
-        password: md5(user.password),
+  /**
+   * 用户登录
+   * @param user 
+   */
+  async login(user: LoginDto) {
+    const findUser = await this.userRepository.findOne({
+      where: {
         email: user.email,
-        status: user.status
-      }).
-      where({ id: userVo.id }).
-      execute()
-    if (result) {
-      throw new HttpException('更新成功', HttpStatus.OK)
-    } else {
-      throw new HttpException('更新失败', HttpStatus.BAD_REQUEST)
+        isDelete: 0
+      }
+    });
+    if (!findUser) {
+      throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST);
     }
+
+    if (findUser.password !== md5(user.password)) {
+      throw new HttpException('密码错误', HttpStatus.BAD_REQUEST);
+    }
+    
+    const vo = new LoginUserVo();
+    vo.userInfo = {
+      id: findUser.id,
+      user_name: findUser.user_name,
+      email: findUser.email,
+      head_pic: findUser.head_pic,
+      phone_number: findUser.phone_number
+    };
+
+    return vo;
   }
 
+  /**
+   * 获取用户信息
+   * @param userId 
+   */
+  async getUserInfo(userId: number) {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: userId,
+        isDelete: 0
+      }
+    });
+    if (!user) {
+      throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST);
+    }
+    return user;
+  }
+
+
+  async updatePassword(passwordDto: UpdatePasswordDto) {
+
+  }
 }

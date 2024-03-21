@@ -9,10 +9,9 @@ export class User{
     id: number;
 
     @Column({
-        name: 'user_name',
         comment: '用户名称'
     })
-    userName: string;
+    user_name: string;
 
     @Column({
         comment: '用户密码'
@@ -20,19 +19,17 @@ export class User{
     password: string;
 
     @Column({
-        name: 'head_pic',
         comment: '用户头像',
         nullable: true
     })
-    headPic: string;
+    head_pic: string;
 
     @Column({
-        name: 'phone_number',
         comment: '手机号码',
         length: 20,
         nullable: true
     })
-    phoneNumber: string;
+    phone_number: string;
 
     @Column({
         comment: '邮箱',

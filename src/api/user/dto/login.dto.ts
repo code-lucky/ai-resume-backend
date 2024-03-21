@@ -1,7 +1,7 @@
 import { IsNotEmpty } from "class-validator";
 
-export class CreateUserDto{
-
+export class LoginDto{
+    
     @IsNotEmpty({
         message: '密码不能为空'
     })
@@ -11,9 +11,4 @@ export class CreateUserDto{
         message: '邮箱不能为空'
     })
     email: string;
-
-    @IsNotEmpty({
-        message: '验证码不能为空'
-    })
-    captcha: string;
 }

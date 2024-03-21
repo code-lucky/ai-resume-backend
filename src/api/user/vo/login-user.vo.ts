@@ -6,16 +6,16 @@ class UserInfo{
   id: number;
   
   @ApiProperty()
-  userName: string;
+  user_name: string;
 
   @ApiProperty()
   email: string;
 
   @ApiProperty()
-  headPic: string;
+  head_pic: string;
 
   @ApiProperty()
-  phoneNumber: string;
+  phone_number: string;
 }
 
 
@@ -25,9 +25,9 @@ export class LoginUserVo {
     userInfo: UserInfo;
 
     @ApiProperty()
-    accessToken: string;
+    access_token: string;
 
     @ApiProperty()
-    refreshToken: string;
+    refresh_token: string;
     vo: { id: number; };
 }

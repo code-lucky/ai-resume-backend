@@ -22,7 +22,7 @@ export class EmailService {
     async sendMail({ to, subject, html }) {
         await this.transporter.sendMail({
             from: {
-                name: 'nest-cli',
+                name: 'AI resume',
                 address: this.configService.get('nodemailer_auth_user')
             },
             to,

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Inject, HttpStatus, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Inject, HttpStatus, Query, Req } from '@nestjs/common';
 import { UserService } from './user.service';
 import { EmailService } from 'src/api/email/email.service';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -7,10 +7,11 @@ import { RequireLogin } from 'src/decorator/custom.decorator';
 import { LoginUserVo } from './vo/login-user.vo';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { userLoginByPasswordDto } from './dto/user-login-password.dto';
+import { LoginDto } from './dto/login.dto';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UserListVo } from './vo/user-list.vo';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdatePasswordDto } from './dto/update_paddword.dto';
+import { Request } from 'express';
 
 @Controller('user')
 export class UserController {
@@ -23,15 +24,20 @@ export class UserController {
   @Inject(ConfigService)
   private configService: ConfigService;
 
+  @Inject(EmailService)
+  private emailService: EmailService;
+
+  @Inject(RedisService)
+  private redisService: RedisService;
+
   /**
    * 注册
    * @param user 
    * @returns 
    */
   @Post('register')
-  async register(@Body()user: Object){
-    console.log('user', user)
-    // return await this.userService.createUser(user)
+  async register(@Body() user: CreateUserDto) {
+    return await this.userService.createUser(user);
   }
 
   /**
@@ -40,8 +46,21 @@ export class UserController {
    * @returns 
    */
   @Post('login')
-  async login(@Body()user: userLoginByPasswordDto){
-    return 'login'
+  async userLogin(@Body() user: LoginDto) {
+    const vo = await this.userService.login(user)
+    vo.access_token = this.jwtService.sign({
+      userId: vo.userInfo.id,
+      username: vo.userInfo.user_name
+    },{
+      expiresIn: this.configService.get('jwt_access_token_expires_time') || '30m'
+    })
+
+    vo.refresh_token = this.jwtService.sign({
+      userId: vo.userInfo.id
+    }, {
+      expiresIn: this.configService.get('jwt_refresh_token_expres_time') || '7d'
+    });
+    return vo;
   }
 
   /**
@@ -49,15 +68,43 @@ export class UserController {
    * @param userId 
    * @returns 
    */
-  @Get(':userId')
-  async getUserProfile(@Param('userId') userId: number){
-    console.log('userId', userId)
+  @Get('user')
+  @RequireLogin()
+  async getUserProfile(@Req() request: Request) {
+    console.log('request', request.user)
+    return await this.userService.getUserInfo(request.user.userId);
+  }
+
+  /**
+   * 更新用户信息
+   * @param user 
+   * @returns 
+   */
+  @Post('update')
+  @RequireLogin()
+  async updateUser(@Req() request: Request,@Body() user: UpdateUserDto) {
+    console.log('request', request)
     return ''
   }
 
+  @Post('update/password')
+  @RequireLogin()
+  async updatePassword(@Req() request: Request, @Body() passwordDto: UpdatePasswordDto) {
+    console.log('password,', passwordDto)
+    return 'success'
+  }
+
   @Get('captcha/register')
-  async captcha(@Query('email')email: String){
-    console.log('email', email)
-    return ''
+  async captcha(@Query('email') email: String) {
+    const code = Math.random().toString().slice(2, 8);
+
+    await this.redisService.set(`captcha_${email}`, code, 5 * 60);
+
+    await this.emailService.sendMail({
+      to: email,
+      subject: '注册验证码',
+      html: `<p>你的注册验证码是 ${code}</p>`
+    });
+    return '发送成功';
   }
 }

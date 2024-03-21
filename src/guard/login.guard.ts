@@ -7,8 +7,7 @@ import { UnLoginException } from './unlogin.filter';
 
 interface JwtUserData {
   userId: number;
-  username: string;
-  roles: string[];
+  username: String;
 }
 
 declare module 'express' {
@@ -53,9 +52,9 @@ export class LoginGuard implements CanActivate {
 
       request.user = {
         userId: data.userId,
-        username: data.username,
-        roles: data.roles
+        username: data.username
       }
+
       return true;
     } catch(e) {
       throw new UnLoginException()

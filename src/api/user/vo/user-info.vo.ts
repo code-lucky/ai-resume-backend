@@ -6,17 +6,14 @@ export class UserInfoVo{
   id: number;
   
   @ApiProperty()
-  username: string;
-
-  @ApiProperty()
-  nickName: string;
+  user_name: string;
 
   @ApiProperty()
   email: string;
 
   @ApiProperty()
-  headPic: string;
+  head_pic: string;
 
   @ApiProperty()
-  phoneNumber: string;
+  phone_number: string;
 }
