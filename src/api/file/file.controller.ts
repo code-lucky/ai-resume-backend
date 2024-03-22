@@ -9,11 +9,11 @@ import { RequireLogin } from 'src/decorator/custom.decorator';
 import { Body, UploadedFiles } from '@nestjs/common/decorators/http/route-params.decorator';
 
 @Controller('file')
-@RequireLogin()
 export class FileController {
   constructor(private readonly fileService: FileService) {}
 
   @Get(':filename')
+  @RequireLogin()
   async serveImage(@Param('filename') filename: string, @Res() res: Response) {
     try {
       const imagePath = `uploads/${filename}`; // 设置为你的本地图片路径
@@ -31,7 +31,6 @@ export class FileController {
     storage: storage
   }))
   async fileUpload(@UploadedFiles() file: Express.Multer.File, @Body() body) {
-    console.log(file);
     return {file: file[0].filename}
   }
 }
