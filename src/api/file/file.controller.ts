@@ -7,16 +7,18 @@ import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { storage } from 'src/config/storage';
 import { RequireLogin } from 'src/decorator/custom.decorator';
 import { Body, UploadedFiles } from '@nestjs/common/decorators/http/route-params.decorator';
+import { join } from 'path';
 
 @Controller('file')
 export class FileController {
   constructor(private readonly fileService: FileService) {}
 
   @Get(':filename')
-  @RequireLogin()
   async serveImage(@Param('filename') filename: string, @Res() res: Response) {
     try {
-      const imagePath = `uploads/${filename}`; // 设置为你的本地图片路径
+      const projectRoot = process.cwd();
+      const imagePath = join(projectRoot, 'uploads', filename);
+      console.log(imagePath);
       const imageBuffer = await this.fileService.readLocalImage(imagePath);
       res.setHeader('Content-Type', 'image/jpeg'); // 设置响应的Content-Type，根据实际情况调整
       res.send(imageBuffer);
