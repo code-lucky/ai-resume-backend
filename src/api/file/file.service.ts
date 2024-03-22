@@ -1,17 +1,15 @@
-import { Injectable } from '@nestjs/common';
 import * as fs from 'fs';
+import { promisify } from 'util';
 
-@Injectable()
+const readFileAsync = promisify(fs.readFile);
+
 export class FileService {
   async readLocalImage(filePath: string): Promise<Buffer> {
-    return new Promise((resolve, reject) => {
-      fs.readFile(filePath, (err, data) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(data);
-        }
-      });
-    });
+    try {
+      const data = await readFileAsync(filePath);
+      return data;
+    } catch (error) {
+      throw new Error(`Error reading local image: ${error.message}`);
+    }
   }
 }

@@ -14,9 +14,15 @@ import { Constant } from './utils/constant';
 import { APP_GUARD } from '@nestjs/core';
 import { LoginGuard } from './guard/login.guard';
 import { FileModule } from './api/file/file.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'), // 图片文件夹的路径
+      serveRoot: '/api/images', // 将静态文件服务到 /images 路径
+    }),
     WinstonModule.forRoot({
       level: 'debug',
       transports: [

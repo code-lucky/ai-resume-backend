@@ -8,6 +8,7 @@ import { InvokeRecordInterceptor } from './interceptors/invoke-record.intercepto
 import { WINSTON_LOGGER_TOKEN } from './winston/winston.module';
 import { CustomExceptionFilter } from './filter/custom-exception.filter';
 import { UnloginFilter } from './guard/unlogin.filter';
+import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
