@@ -1,10 +1,8 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Inject, HttpStatus, Query, Req } from '@nestjs/common';
 import { UserService } from './user.service';
 import { EmailService } from 'src/api/email/email.service';
-import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { RedisService } from 'src/redis/redis.service';
 import { RequireLogin } from 'src/decorator/custom.decorator';
-import { LoginUserVo } from './vo/login-user.vo';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { LoginDto } from './dto/login.dto';
@@ -71,7 +69,6 @@ export class UserController {
   @Get('user')
   @RequireLogin()
   async getUserProfile(@Req() request: Request) {
-    console.log('request', request.user)
     return await this.userService.getUserInfo(request.user.userId);
   }
 
@@ -83,17 +80,26 @@ export class UserController {
   @Post('update')
   @RequireLogin()
   async updateUser(@Req() request: Request,@Body() user: UpdateUserDto) {
-    console.log('request', request)
-    return ''
+    return await this.userService.updateUser(request.user.userId, user);
   }
 
+  /**
+   * 更新密码
+   * @param request 
+   * @param passwordDto 
+   * @returns 
+   */
   @Post('update/password')
   @RequireLogin()
   async updatePassword(@Req() request: Request, @Body() passwordDto: UpdatePasswordDto) {
-    console.log('password,', passwordDto)
-    return 'success'
+    return await this.userService.updatePassword(request.user.userId, passwordDto);
   }
 
+  /**
+   * 获取验证码
+   * @param email
+   * @returns
+   */
   @Get('captcha/register')
   async captcha(@Query('email') email: String) {
     const code = Math.random().toString().slice(2, 8);

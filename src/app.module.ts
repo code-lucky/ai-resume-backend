@@ -13,6 +13,7 @@ import * as chalk from 'chalk';
 import { Constant } from './utils/constant';
 import { APP_GUARD } from '@nestjs/core';
 import { LoginGuard } from './guard/login.guard';
+import { FileModule } from './api/file/file.module';
 
 @Module({
   imports: [
@@ -84,6 +85,7 @@ import { LoginGuard } from './guard/login.guard';
     RedisModule,
     EmailModule,
     UserModule,
+    FileModule
   ],
   controllers: [AppController],
   providers: [

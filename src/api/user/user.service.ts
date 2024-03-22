@@ -8,6 +8,7 @@ import { md5 } from 'src/utils/md5';
 import { LoginDto } from './dto/login.dto';
 import { LoginUserVo } from './vo/login-user.vo';
 import { UpdatePasswordDto } from './dto/update_paddword.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 @Injectable()
 export class UserService {
 
@@ -101,7 +102,65 @@ export class UserService {
   }
 
 
-  async updatePassword(passwordDto: UpdatePasswordDto) {
+  /**
+   * 更新用户信息
+   * @param userId 
+   * @param user 
+   */
+  async updatePassword(userId: number,passwordDto: UpdatePasswordDto) {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: userId,
+        isDelete: 0
+      }
+    });
+    if (!user) {
+      throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST);
+    }
 
+    if (user.password !== md5(passwordDto.old_password)) {
+      throw new HttpException('原密码错误', HttpStatus.BAD_REQUEST);
+    }
+
+    if (passwordDto.new_password !== passwordDto.confirm_password) {
+      throw new HttpException('两次密码不一致', HttpStatus.BAD_REQUEST);
+    }
+
+    user.password = md5(passwordDto.new_password);
+    try {
+      await this.userRepository.save(user);
+      return '密码修改成功';
+    } catch (error) {
+      throw new HttpException('密码修改失败', HttpStatus.BAD_REQUEST);
+    }
+  }
+
+
+  /**
+   * 更新用戶信息
+   * @param userId 
+   * @param user 
+   */
+  async updateUser(userId: number, user: UpdateUserDto) {
+    const findUser = await this.userRepository.findOne({
+      where: {
+        id: userId,
+        isDelete: 0
+      }
+    });
+    if (!findUser) {
+      throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST);
+    }
+    
+    findUser.user_name = user.user_name;
+    findUser.email = user.email;
+    findUser.head_pic = user.head_pic;
+    findUser.phone_number = user.phone_number;
+    try {
+      await this.userRepository.save(findUser);
+      return '更新成功';
+    } catch (error) {
+      throw new HttpException('更新失败', HttpStatus.BAD_REQUEST);
+    }
   }
 }

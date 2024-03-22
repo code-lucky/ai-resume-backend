@@ -5,10 +5,10 @@ import { Constant } from "src/utils/constant";
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         try {
-            fs.mkdirSync(path.join(process.cwd(), `uploads/${Constant.CURRENT_DATE}`));
+            fs.mkdirSync(path.join(process.cwd(), `uploads`));
         }catch(e) {}
 
-        cb(null, path.join(process.cwd(), `uploads/${Constant.CURRENT_DATE}`))
+        cb(null, path.join(process.cwd(), `uploads`))
     },
     filename: function (req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9) + '-' + file.originalname
