@@ -151,7 +151,7 @@ export class UserService {
     if (!findUser) {
       throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST);
     }
-    
+     
     findUser.user_name = user.user_name;
     findUser.email = user.email;
     findUser.head_pic = user.head_pic;
