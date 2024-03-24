@@ -36,6 +36,36 @@ export class User{
         nullable: true
     })
     email: string;
+    
+    @Column({
+        comment: '用户性别',
+        default: 0
+    })
+    gender: number;
+
+    @Column({
+        comment: '学校',
+        nullable: true
+    })
+    school: string;
+
+    @Column({
+        comment: '岗位',
+        nullable: true
+    })
+    professional: string;
+
+    @Column({
+        comment: '籍贯',
+        nullable: true
+    })
+    original: string;
+
+    @Column({
+        comment: '毕业时间',
+        nullable: true
+    })
+    graduation: Date;
 
     @Column({
         comment: '用户状态',

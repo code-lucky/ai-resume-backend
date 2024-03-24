@@ -18,4 +18,14 @@ export class UpdateUserDto{
     head_pic: string;
     
     phone_number: string;
+
+    gender: number;
+
+    school: string;
+
+    professional: string;
+
+    original: string;
+
+    graduation: Date;
 }

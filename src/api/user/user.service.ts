@@ -156,6 +156,11 @@ export class UserService {
     findUser.email = user.email;
     findUser.head_pic = user.head_pic;
     findUser.phone_number = user.phone_number;
+    findUser.gender = user.gender;
+    findUser.school = user.school;
+    findUser.professional = user.professional;
+    findUser.original = user.original;
+    findUser.graduation = user.graduation;
     try {
       await this.userRepository.save(findUser);
       return '更新成功';
