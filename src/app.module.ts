@@ -64,7 +64,8 @@ import { join } from 'path';
     }),
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: 'src/.env'
+      // envFilePath: 'src/.env'
+      envFilePath: 'src/.env.local'
     }),
     TypeOrmModule.forRootAsync({
       useFactory(configService: ConfigService) {

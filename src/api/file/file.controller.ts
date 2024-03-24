@@ -8,6 +8,7 @@ import { storage } from 'src/config/storage';
 import { RequireLogin } from 'src/decorator/custom.decorator';
 import { Body, UploadedFiles } from '@nestjs/common/decorators/http/route-params.decorator';
 import { join } from 'path';
+import * as fs from 'fs';
 
 @Controller('file')
 export class FileController {
@@ -34,5 +35,43 @@ export class FileController {
   }))
   async fileUpload(@UploadedFiles() file: Express.Multer.File, @Body() body) {
     return {file: file[0].filename}
+  }
+
+  @Get('video/:filename')
+  async getVideos(@Param('filename') filename: string, @Res() res: Response) {
+    const videoPath = join('', filename);; // 路径应指向您的视频文件夹
+    const stat = fs.statSync(videoPath);
+    const fileSize = stat.size;
+    const range = res.req.headers.range;
+
+    if (range) {
+      const parts = range.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      const chunksize = (end - start) + 1;
+      const file = fs.createReadStream(videoPath, { start, end });
+      const head = {
+        'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+        'Accept-Ranges': 'bytes',
+        'Content-Length': chunksize,
+        'Content-Type': 'video/mp4',
+      };
+
+      res.writeHead(206, head);
+      file.pipe(res);
+    } else {
+      const head = {
+        'Content-Length': fileSize,
+        'Content-Type': 'video/mp4',
+      };
+      res.writeHead(200, head);
+      fs.createReadStream(videoPath).pipe(res);
+    }
+  }
+
+  @Get('files')
+  getFileName() {
+    const directoryPath = ''
+    return this.fileService.getAllFileNames(directoryPath);
   }
 }

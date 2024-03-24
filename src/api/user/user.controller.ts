@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Inject, HttpStatus, Query, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Inject, HttpStatus, Query, Req, HttpException } from '@nestjs/common';
 import { UserService } from './user.service';
 import { EmailService } from 'src/api/email/email.service';
 import { RedisService } from 'src/redis/redis.service';
@@ -10,6 +10,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update_paddword.dto';
 import { Request } from 'express';
+import axios from 'axios';
 
 @Controller('user')
 export class UserController {
@@ -49,7 +50,7 @@ export class UserController {
     vo.access_token = this.jwtService.sign({
       userId: vo.userInfo.id,
       username: vo.userInfo.user_name
-    },{
+    }, {
       expiresIn: this.configService.get('jwt_access_token_expires_time') || '30m'
     })
 
@@ -79,7 +80,7 @@ export class UserController {
    */
   @Post('update')
   @RequireLogin()
-  async updateUser(@Req() request: Request,@Body() user: UpdateUserDto) {
+  async updateUser(@Req() request: Request, @Body() user: UpdateUserDto) {
     return await this.userService.updateUser(request.user.userId, user);
   }
 
@@ -112,5 +113,17 @@ export class UserController {
       html: `<p>你的注册验证码是 ${code}</p>`
     });
     return '发送成功';
+  }
+
+
+  @Get('wx/login')
+  async wxLogin(@Query('code') code: string) {
+    try {
+      const reqUrl = `https://api.weixin.qq.com/sns/jscode2session?appid=${this.configService.get('wechat_appid')}&secret=${this.configService.get('wechat_secret')}&js_code=${code}&grant_type=authorization_code`
+      const response = await axios.get(reqUrl)
+      return response.data
+    } catch (e) {
+      throw new HttpException('微信登录失败', HttpStatus.BAD_REQUEST)
+    }
   }
 }
