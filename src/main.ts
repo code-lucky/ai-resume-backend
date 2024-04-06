@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { FormatResponseInterceptor } from './interceptors/format-response.interceptor';
-import { ValidationPipe } from '@nestjs/common';
+import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { InvokeRecordInterceptor } from './interceptors/invoke-record.interceptor';
@@ -27,7 +27,7 @@ async function bootstrap() {
   app.useGlobalInterceptors(new InvokeRecordInterceptor())
   app.useGlobalFilters(new UnloginFilter())
   app.useGlobalFilters(new CustomExceptionFilter())
-
+  
   const config = new DocumentBuilder()
     .setTitle('nest-cli')
     .setDescription('api接口文档')
